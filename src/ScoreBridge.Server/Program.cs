@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ScoreBridge.Server.Options.Scoreboards;
 using Serilog;
 
 var host = Host.CreateDefaultBuilder(args)
@@ -15,11 +16,10 @@ var host = Host.CreateDefaultBuilder(args)
 
     .ConfigureServices((host, services) =>
     {
-        services.Configure<EthernetOptions>(host.Configuration.GetSection("Ethernet"));
-        services.Configure<SerialOptions>(host.Configuration.GetSection("Serial"));
+
         services.Configure<BroadcastOptions>(host.Configuration.GetSection("Broadcast"));
 
-        services.AddSingleton<IBroadcaster, EthernetBroadcaster>();
+        services.AddSingleton<IBroadcaster, TcpBroadcaster>();
         services.AddHostedService<ScoreConnectService>();
     })
     
@@ -33,13 +33,21 @@ var host = Host.CreateDefaultBuilder(args)
 
 Parser.Default.ParseArguments<StartOptions>(args).WithParsed(options =>
 {
-    if (options.InputMode == StartOptions.InputModeEnum.Ethernet)
+    if (options.InputMode == StartOptions.InputModeEnum.Scorepad)
     {
-        host.ConfigureServices(collection => collection.AddSingleton<IListener, EthernetListener>());
+        host.ConfigureServices((host, collection) =>
+        {
+            collection.AddSingleton<IListener, ScorepadListener>();
+            collection.Configure<ScorepadOptions>(host.Configuration.GetSection("BodetScorepad"));
+        });
     }
-    else if (options.InputMode == StartOptions.InputModeEnum.Serial)
+    else if (options.InputMode == StartOptions.InputModeEnum.Bodet)
     {
-        host.ConfigureServices(collection => collection.AddSingleton<IListener, SerialListener>());
+        host.ConfigureServices((host, collection) =>
+        {
+            collection.AddSingleton<IListener, BodetListener>();
+            collection.Configure<BodetOptions>(host.Configuration.GetSection("Bodet"));
+        });
     }
 }).WithNotParsed(errors =>
 {

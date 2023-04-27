@@ -6,8 +6,8 @@ public class StartOptions
 {
     public enum InputModeEnum
     {
-        Serial,
-        Ethernet 
+        Bodet,
+        Scorepad 
     }
     
     [Option('i', "inputmode", Required = true, HelpText = "Input mode")]

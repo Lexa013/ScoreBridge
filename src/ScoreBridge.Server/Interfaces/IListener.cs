@@ -4,7 +4,7 @@ public interface IListener
 {
     void Setup();
 
-    void Start();
+    Task Start();
 
     void Stop();
 }

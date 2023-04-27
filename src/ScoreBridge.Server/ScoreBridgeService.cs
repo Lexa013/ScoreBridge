@@ -19,11 +19,11 @@ public class ScoreConnectService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting service, listening on {@Type} port", _listener.GetType() == typeof(IListener) ? "serial" : "ethernet");
+        _logger.LogInformation("Starting service, listening to {@Type}", _listener.GetType().Name);
         
         // Initialize and start the broadcaster
         _broadcaster.Setup();
-        _broadcaster.Connect();
+        _broadcaster.Start();
         
         // Initialize and start the listener
         _listener.Setup();
@@ -35,7 +35,7 @@ public class ScoreConnectService : IHostedService
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _listener.Stop();
-        _broadcaster.Disconnect();
+        _broadcaster.Stop();
         
         return Task.CompletedTask;
     }

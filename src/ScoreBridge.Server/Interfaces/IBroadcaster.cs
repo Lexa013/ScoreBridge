@@ -5,9 +5,9 @@ namespace ScoreBridge.Server.Interfaces;
 public interface IBroadcaster
 {
     void Setup();
-    void Connect();
+    Task Start();
     
-    void Disconnect();
+    void Stop();
     
-    void Broadcast(string message);
+    Task Broadcast(byte[] message);
 }

@@ -1,12 +1,28 @@
 ﻿using System.Net;
+using System.Net.Sockets;
 
 namespace ScoreBridge.Server.Entities;
 
 public class Client
 {
-    public IPEndPoint EndPoint;
-    public TimeSpan LastMessage;
+    public TcpClient TcpClient { get; set; }
 
-    public string Ip
-        => $"{EndPoint.Address.ToString()}:{EndPoint.Port}";
+    public bool Authed { get; set; } = false;
+
+    public bool Stream { get; set; } = false;
+
+    public Client(TcpClient tcpClient)
+    {
+        TcpClient = tcpClient;
+    }
+    
+    public string GetIpAndPort()
+    {
+        if (TcpClient.Client.RemoteEndPoint is null)
+            return "Invalid endpoint";
+        
+        IPEndPoint ipEndpoint = (IPEndPoint)TcpClient.Client.RemoteEndPoint;
+
+        return $"{ipEndpoint.Address}:{ipEndpoint.Port}";
+    }
 }

@@ -4,34 +4,46 @@ using System.Text;
 
 class Program
 {
-    public static async Task Main(string[] args)
+    static async Task Main(string[] args)
     {
-        var localport = 5659;
-        var serverport = 1868;
-        var udpClient = new UdpClient(localport);
-        
-        try
-        {
-            udpClient.Connect(IPAddress.Parse("192.168.1.30"), serverport);
 
-            byte[] passwordBytes = Encoding.ASCII.GetBytes("pass");
-            udpClient.Send(passwordBytes, passwordBytes.Length);
+        // Connect to the server
+        TcpClient client = new TcpClient();
+        await client.ConnectAsync(IPAddress.Parse("192.168.1.94"), 1868);
 
-            IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, localport);
-            
-            while (true)
-            {
-                byte[] receivedBytes = udpClient.Receive(ref remoteEndPoint);
-                string receivedData = Encoding.ASCII.GetString(receivedBytes);
-                Console.WriteLine($"Received data: {receivedData}");
-            }
-        }
-        catch (Exception ex)
+        // Start tasks to send and receive data
+        Task receiveTask = ReceiveDataAsync(client);
+        Task sendTask = SendDataAsync(client);
+
+        // Wait for both tasks to complete
+        await Task.WhenAll(receiveTask, sendTask);
+
+        // Close the connection
+        client.Close();
+    }
+
+    static async Task ReceiveDataAsync(TcpClient client)
+    {
+        byte[] buffer = new byte[1024];
+        int bytesRead;
+        NetworkStream stream = client.GetStream();
+
+        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
         {
-            Console.WriteLine($"Error connecting to server: {ex.Message}");
-            throw;
+            string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            Console.WriteLine("Received message: " + message);
         }
-        
-        
+    }
+
+    static async Task SendDataAsync(TcpClient client)
+    {
+        NetworkStream stream = client.GetStream();
+
+        while (true)
+        {
+            string message = Console.ReadLine();
+            byte[] data = Encoding.ASCII.GetBytes(message);
+            await stream.WriteAsync(data, 0, data.Length);
+        }
     }
 }
