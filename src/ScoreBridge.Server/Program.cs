@@ -1,4 +1,5 @@
-﻿using ScoreBridge.Server;
+﻿using System.Text;
+using ScoreBridge.Server;
 using ScoreBridge.Server.Broadcasters;
 using ScoreBridge.Server.Interfaces;
 using ScoreBridge.Server.Listeners;
@@ -35,18 +36,24 @@ Parser.Default.ParseArguments<StartOptions>(args).WithParsed(options =>
 {
     if (options.InputMode == StartOptions.InputModeEnum.Scorepad)
     {
-        host.ConfigureServices((host, collection) =>
+        host.ConfigureServices((context, collection) =>
         {
             collection.AddSingleton<IListener, ScorepadListener>();
-            collection.Configure<ScorepadOptions>(host.Configuration.GetSection("BodetScorepad"));
+            collection.Configure<ScorepadOptions>(
+                context.Configuration.
+                    GetSection("Scoreboards")
+                    .GetSection("Scorepad"));
         });
     }
     else if (options.InputMode == StartOptions.InputModeEnum.Bodet)
     {
-        host.ConfigureServices((host, collection) =>
+        host.ConfigureServices((context, collection) =>
         {
             collection.AddSingleton<IListener, BodetListener>();
-            collection.Configure<BodetOptions>(host.Configuration.GetSection("Bodet"));
+            collection.Configure<BodetOptions>(
+                context.Configuration
+                    .GetSection("Scoreboards")
+                    .GetSection("Bodet"));
         });
     }
 }).WithNotParsed(errors =>
@@ -54,53 +61,6 @@ Parser.Default.ParseArguments<StartOptions>(args).WithParsed(options =>
     Environment.Exit(0);
 });
 
+Console.OutputEncoding = Encoding.ASCII;
 
 await host.Build().RunAsync();
-
-
-// char[] buffer = new char[1024];
-// List<string> trams = new();
-//     
-// int index = 0;
-// bool hasStart = false;
-//
-// void ResetBuffer()
-// {
-//     buffer = new char[1024];
-//     index = 0;
-//     hasStart = false;
-// }
-//
-// using (StreamReader streamReader = new StreamReader("E:\\Bureau\\serialOutput.txt"))
-// {
-//     while (streamReader.Peek() >= 0)
-//     {
-//         int charInt = streamReader.Read();
-//         
-//         buffer[index] = (char)charInt;
-//         index++;
-//         
-//         
-//         if ((char)charInt == '\x02')
-//         {
-//             hasStart = true;
-//             index = 0;
-//             continue;
-//         }
-//         
-//         if ((char) charInt == '\x03' && hasStart)
-//         {
-//             string trame = new string(buffer, 0, index -1);
-//             trams.Add(trame);
-//             
-//             ResetBuffer();
-//             continue;
-//         }
-//         
-//     }
-//
-//     Console.OutputEncoding = Encoding.ASCII;
-//     foreach (var t in trams)
-//     {
-//         Console.WriteLine($"{t} - {t.Length}");
-//     }

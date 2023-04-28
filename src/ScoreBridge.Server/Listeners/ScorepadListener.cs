@@ -13,8 +13,8 @@ public class ScorepadListener : IListener
     private readonly ILogger<ScorepadListener> _logger;
     private readonly IOptions<ScorepadOptions> _options;
     
-    private TcpListener _listener;
-    private CancellationTokenSource _tokenSource;
+    private TcpListener _listener = null!;
+    private CancellationTokenSource _tokenSource = null!;
     private Task? _clientHandlingTask;
 
     public ScorepadListener(ILogger<ScorepadListener> logger, IOptions<ScorepadOptions> options)
@@ -28,26 +28,26 @@ public class ScorepadListener : IListener
         _listener = new TcpListener(IPAddress.Any, _options.Value.Port);
         _tokenSource = new CancellationTokenSource();
     }
-    
+
     public async Task Start()
     {
         _listener.Start();
-        
+
         _logger.LogInformation("Started listening on {@Address}", _listener.LocalEndpoint);
-        
+
         while (!_tokenSource.IsCancellationRequested)
         {
             TcpClient client;
-                
+
             try
             {
                 client = await _listener.AcceptTcpClientAsync();
             }
-            catch (Exception e)
+            catch (SocketException)
             {
                 continue;
             }
-                
+
             _logger.LogInformation("Client connected from {@Endpoint}", client.Client.RemoteEndPoint);
 
             if (_clientHandlingTask is not null)
@@ -55,11 +55,8 @@ public class ScorepadListener : IListener
                 _logger.LogInformation("Client reconnected, recreating the task !");
                 _clientHandlingTask.Dispose();
             }
-            
-            _clientHandlingTask = Task.Factory.StartNew(() =>
-            {
-                HandleClient(client);
-            });
+
+            _clientHandlingTask = Task.Run(() => HandleClient(client));
         }
     }
 

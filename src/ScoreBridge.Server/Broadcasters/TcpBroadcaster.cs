@@ -32,6 +32,7 @@
 
         public void Setup()
         {
+            
             _listener = new TcpListener(IPAddress.Any, _options.Value.Port);
 
             _tokenSource = new CancellationTokenSource();
@@ -52,23 +53,22 @@
                     client = await _listener.AcceptTcpClientAsync();
                     client.NoDelay = true;
                 }
-                catch (Exception e)
+                catch (SocketException)
                 {
                     continue;
                 }
                 
                 _logger.LogInformation("Client connected from {@Endpoint}", client.Client.RemoteEndPoint);
 
-                Task.Run(() =>
-                {
-                    HandleClient(client);
-                }, _tokenSource.Token);
+                #pragma warning disable CS4014
+                HandleClientAsync(client);
+                #pragma warning restore CS4014
                 
                 _logger.LogInformation("waiting for for other client");
             }
         }
 
-        public async Task HandleClient(TcpClient tcpClient)
+        public async Task HandleClientAsync(TcpClient tcpClient)
         {
             NetworkStream stream = tcpClient.GetStream();
             byte[] buffer = new byte[1024];
@@ -96,7 +96,7 @@
                 {
                     dataLenght = await stream.ReadAsync(buffer, 0, buffer.Length);
                 }
-                catch (IOException e)
+                catch (IOException)
                 {
                     KickClient(client);
                     break;
@@ -147,9 +147,9 @@
         /// Broadcast data all across connected clients
         /// </summary>
         /// <param name="bytes">The data that will be sent to all connected clients</param>
-        public async Task Broadcast(ReadOnlySpan<byte> bytes)
+        public async Task Broadcast(byte[] bytes)
         { 
-            _logger.LogInformation(Encoding.ASCII.GetString());
+            // _logger.LogInformation("Message: {@Message}", Encoding.ASCII.GetString(bytes));
 
             foreach (var client in _clients)
             {
@@ -159,7 +159,7 @@
                 try
                 {
                     NetworkStream stream = client.TcpClient.GetStream();
-                    await stream.Wr(bytes); }
+                    await stream.WriteAsync(bytes); }
                 catch (IOException)
                 {
                     KickClient(client);

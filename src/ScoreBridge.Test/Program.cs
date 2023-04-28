@@ -9,7 +9,7 @@ class Program
 
         // Connect to the server
         TcpClient client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Parse("192.168.1.94"), 1868);
+        await client.ConnectAsync(IPAddress.Parse("192.168.1.30"), 1868);
 
         // Start tasks to send and receive data
         Task receiveTask = ReceiveDataAsync(client);

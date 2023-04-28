@@ -14,10 +14,10 @@ public class BodetListener : IListener
     private readonly IOptions<BodetOptions> _options;
     private readonly ILogger<BodetListener> _logger;
     private readonly IHostApplicationLifetime _applicationLifetime;
-    private IBroadcaster _broadcaster;
+    private readonly IBroadcaster _broadcaster;
 
-    private CancellationTokenSource _tokenSource;
-    private SerialPort _serialPort;
+    private CancellationTokenSource _tokenSource = null!;
+    private SerialPort _serialPort = null!;
 
     public BodetListener(IOptions<BodetOptions> options, ILogger<BodetListener> logger, IHostApplicationLifetime applicationLifetime, IBroadcaster broadcaster)
     {
@@ -41,7 +41,7 @@ public class BodetListener : IListener
         };
     }
 
-    public Task Start()
+    public async Task Start()
     {
         _logger.LogInformation("Opening serial port on {@PortIdentifier}", _options.Value.PortName);
 
@@ -59,14 +59,14 @@ public class BodetListener : IListener
                 
         }
 
-        Task.Factory.StartNew( () =>
+        Task.Factory.StartNew( async () =>
         {
             while (true)
             {
                 using (StreamReader streamReader = new StreamReader(_options.Value.TestFile))
                 {
                     // Note: As the scorepad sends us Ascii char we can use bytes instead of chars
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[64];
                     
                     // index represents the next position available in the buffer
                     int index = 0;
@@ -93,10 +93,20 @@ public class BodetListener : IListener
                         if ((char) byteValue == '\x03' && hasStart)
                         {
                             buffer[index] = byteValue;
+#pragma warning disable CS4014
+                            _broadcaster.Broadcast(buffer);
+#pragma warning restore CS4014
                             
-                            // TODO convert the the buffer to a Span<byte> to save memory
-                            _broadcaster.Broadcast(buffer.AsSpan(0, index));
                             index = 0;
+                            continue;
+                        }
+
+                        // Prevent buffer from overflowing
+                        if (index + 1 > buffer.Length)
+                        {
+                            _logger.LogWarning("Buffer had overflown, emptying it !");
+                            index = 0;
+                            continue;
                         }
 
                         buffer[index] = byteValue;
@@ -105,8 +115,6 @@ public class BodetListener : IListener
                 }
             }
         },_tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-        
-        return Task.CompletedTask;
     }
 
     public void Stop()

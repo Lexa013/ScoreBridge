@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreBridge.Server", "src\ScoreBridge.Server\ScoreBridge.Server.csproj", "{4B6D4415-1A01-406C-B4C6-E6B7DD4C5F0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreBridge.Client", "src\ScoreBridge.Client\ScoreBridge.Client.csproj", "{CFEC6632-1CF5-425A-9DC9-536D7F2F4CF3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScoreBridge.Test", "src\ScoreBridge.Test\ScoreBridge.Test.csproj", "{CFEC6632-1CF5-425A-9DC9-536D7F2F4CF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
