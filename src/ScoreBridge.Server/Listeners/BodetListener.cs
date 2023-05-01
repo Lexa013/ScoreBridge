@@ -66,7 +66,7 @@ public class BodetListener : IListener
                 using (StreamReader streamReader = new StreamReader(_options.Value.TestFile))
                 {
                     // Note: As the scorepad sends us Ascii char we can use bytes instead of chars
-                    byte[] buffer = new byte[64];
+                    byte[] buffer = new byte[5];
                     
                     // index represents the next position available in the buffer
                     int index = 0;
@@ -78,39 +78,49 @@ public class BodetListener : IListener
                     {
                         byte byteValue = (byte) streamReader.Read();
                         
-                        // If received char is STX
-                        if ((char) byteValue == '\x02')
-                        {
-                            index = 0;
-                            buffer[index] = byteValue;
-                            index++;
-                            
-                            hasStart = true;
-                            continue;
-                        }
-
-                        // If received char is ETX
-                        if ((char) byteValue == '\x03' && hasStart)
-                        {
-                            buffer[index] = byteValue;
-#pragma warning disable CS4014
-                            _broadcaster.Broadcast(buffer);
-#pragma warning restore CS4014
-                            
-                            index = 0;
-                            continue;
-                        }
-
-                        // Prevent buffer from overflowing
-                        if (index + 1 > buffer.Length)
-                        {
-                            _logger.LogWarning("Buffer had overflown, emptying it !");
-                            index = 0;
-                            continue;
-                        }
-
                         buffer[index] = byteValue;
                         index++;
+
+                        if (index > buffer.Length - 1)
+                        {
+                            _broadcaster.Broadcast(buffer);
+                            index = 0;
+                            continue;
+                        }
+                        
+//                         // If received char is STX
+//                         if ((char) byteValue == '\x02')
+//                         {
+//                             index = 0;
+//                             buffer[index] = byteValue;
+//                             index++;
+//                             
+//                             hasStart = true;
+//                             continue;
+//                         }
+//
+//                         // If received char is ETX
+//                         if ((char) byteValue == '\x03' && hasStart)
+//                         {
+//                             buffer[index] = byteValue;
+// #pragma warning disable CS4014
+//                             _broadcaster.Broadcast(buffer);
+// #pragma warning restore CS4014
+//                             
+//                             index = 0;
+//                             continue;
+//                         }
+//
+//                         // Prevent buffer from overflowing
+//                         if (index + 1 > buffer.Length)
+//                         {
+//                             _logger.LogWarning("Buffer had overflown, emptying it !");
+//                             index = 0;
+//                             continue;
+//                         }
+//
+//                         buffer[index] = byteValue;
+//                         index++;
                     }
                 }
             }
