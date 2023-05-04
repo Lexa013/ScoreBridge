@@ -1,15 +1,15 @@
 ﻿using CommandLine;
 
-namespace ScoreBridge.Server.Options;
+namespace ScoreBridge.Server;
 
 public class StartOptions
 {
-    public enum InputModeEnum
+    public enum ScoreboardTypeEnum
     {
-        Bodet,
+        Bt6000,
         Scorepad 
     }
     
     [Option('i', "inputmode", Required = true, HelpText = "Input mode")]
-    public InputModeEnum InputMode { get; set; }
+    public ScoreboardTypeEnum ScoreboardType { get; set; }
 }

@@ -2,14 +2,16 @@
 using System.Net.Sockets;
 using System.Text;
 
-class Program
+namespace ScoreBridge.Test;
+
+static class Program
 {
-    static async Task Main(string[] args)
+    static async Task Main()
     {
 
         // Connect to the server
         TcpClient client = new TcpClient();
-        await client.ConnectAsync(IPAddress.Parse("192.168.1.30"), 1868);
+        await client.ConnectAsync(IPAddress.Parse("192.168.1.30"), 4001);
 
         // Start tasks to send and receive data
         Task receiveTask = ReceiveDataAsync(client);
@@ -39,11 +41,25 @@ class Program
     {
         NetworkStream stream = client.GetStream();
 
+        string? message;
+
         while (true)
         {
-            string message = Console.ReadLine();
-            byte[] data = Encoding.ASCII.GetBytes(message);
-            await stream.WriteAsync(data, 0, data.Length);
+            using (StreamReader reader = new StreamReader("H:\\serialOutput.txt"))
+            {
+                while (!reader.EndOfStream)
+                {
+                    // Read between 4 and 10 characters at a time
+                    char[] buffer = new char[new Random().Next(4, 11)];
+                    reader.Read(buffer, 0, buffer.Length);
+
+                    // Convert the characters to bytes and send them through the serial port
+                    byte[] data = System.Text.Encoding.ASCII.GetBytes(buffer);
+
+                    await stream.WriteAsync(data);
+                }
+            }
         }
+        // ReSharper disable once FunctionNeverReturns
     }
 }

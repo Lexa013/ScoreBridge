@@ -1,66 +1,43 @@
-﻿using System.Text;
-using ScoreBridge.Server;
-using ScoreBridge.Server.Broadcasters;
-using ScoreBridge.Server.Interfaces;
-using ScoreBridge.Server.Listeners;
-using ScoreBridge.Server.Options;
-using CommandLine;
+﻿using CommandLine;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using ScoreBridge.Server.Options.Scoreboards;
 using Serilog;
 
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration(builder => builder.AddJsonFile("appsettings.json", false, true))
+namespace ScoreBridge.Server;
 
-    .ConfigureServices((host, services) =>
-    {
-
-        services.Configure<BroadcastOptions>(host.Configuration.GetSection("Broadcast"));
-
-        services.AddSingleton<IBroadcaster, TcpBroadcaster>();
-        services.AddHostedService<ScoreConnectService>();
-    })
-    
-    .ConfigureLogging(builder => builder.ClearProviders())
-    
-    .UseSerilog((context, configuration) =>
-    {
-        configuration.Enrich.FromLogContext().WriteTo.Console();
-    });
-
-
-Parser.Default.ParseArguments<StartOptions>(args).WithParsed(options =>
+class Program
 {
-    if (options.InputMode == StartOptions.InputModeEnum.Scorepad)
+    public static async Task Main(string[] args)
     {
-        host.ConfigureServices((context, collection) =>
-        {
-            collection.AddSingleton<IListener, ScorepadListener>();
-            collection.Configure<ScorepadOptions>(
-                context.Configuration.
-                    GetSection("Scoreboards")
-                    .GetSection("Scorepad"));
-        });
-    }
-    else if (options.InputMode == StartOptions.InputModeEnum.Bodet)
-    {
-        host.ConfigureServices((context, collection) =>
-        {
-            collection.AddSingleton<IListener, BodetListener>();
-            collection.Configure<BodetOptions>(
-                context.Configuration
-                    .GetSection("Scoreboards")
-                    .GetSection("Bodet"));
-        });
-    }
-}).WithNotParsed(errors =>
-{
-    Environment.Exit(0);
-});
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateLogger();
 
-Console.OutputEncoding = Encoding.ASCII;
+        StartOptions? startOptions = null;
+        
+        Parser.Default.ParseArguments<StartOptions>(args).WithParsed(options =>
+        {
+            startOptions = options;
+        }).WithNotParsed(errors =>
+        {
+            startOptions = null;
+        });
+        
+        if (startOptions is null)
+            return;
 
-await host.Build().RunAsync();
+        var config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json")
+            .Build();
+        
+        CancellationTokenSource tokenSource = new CancellationTokenSource();
+        ScoreBridgeService bridgeService = new ScoreBridgeService(startOptions, config);
+
+        Console.CancelKeyPress += async (sender, eventArgs) =>
+        {
+            eventArgs.Cancel = true;
+            tokenSource.Cancel();
+        };
+
+        await bridgeService.StartAsync(tokenSource.Token);
+    }
+}
