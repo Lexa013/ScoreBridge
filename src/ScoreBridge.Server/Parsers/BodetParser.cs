@@ -75,6 +75,7 @@ public class BodetParser : IParser
     {
         "18" => new Message18(),
         "50" => new Message50(),
+        "30" => new Message30(),
         
         _ => null
     };

@@ -8,10 +8,11 @@ public class Message50 : IPacketFormatter
 {
     public async Task FormatPacketAsync(byte[] bytes)
     {
-        using (FileStream fs = File.Create("/Users/vanstaen/Desktop/output/poss.txt"))
+        const string path = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\possession.txt";
+        
+        using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
         {
             await fs.WriteAsync(bytes[3..5]);
-            Log.Information(Encoding.ASCII.GetString(bytes[3..5]));
         }
     }
 }
