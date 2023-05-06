@@ -7,6 +7,8 @@ namespace ScoreBridge.Server.Parsers;
 
 public class BodetParser : IParser
 {
+    public static string OutputPath = "C:\\Users\\dos reis\\Desktop\\ScorebridgeOutput\\";
+    
     private byte[] _buffer;
     private int _index = 0;
     private bool _hasStart = false;
@@ -56,6 +58,7 @@ public class BodetParser : IParser
         try
         {
             packetFormatter.FormatPacketAsync(str);
+            Log.Information("Formatting packet using {@Formatter}", packetFormatter.GetType().Name);
         }
         catch (Exception e)
         {

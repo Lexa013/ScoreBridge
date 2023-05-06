@@ -8,8 +8,8 @@ public class Message18 : IPacketFormatter
 {
     public async Task FormatPacketAsync(byte[] bytes)
     {
-        const string timePath = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\time.txt";
-        const string periodPath = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\period.txt";
+        string timePath = BodetParser.OutputPath + "time.txt";
+        string periodPath = BodetParser.OutputPath + "period.txt";
 
         bool inDecimal = bytes[6] == 0x44;
         string time;

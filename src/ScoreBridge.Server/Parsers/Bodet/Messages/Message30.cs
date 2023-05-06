@@ -7,8 +7,8 @@ public class Message30 : IPacketFormatter
 {
     public async Task FormatPacketAsync(byte[] bytes)
     {
-        const string homeScorePath = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\homeScore.txt";
-        const string awayScorePath = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\awayScore.txt";
+        string homeScorePath = BodetParser.OutputPath + "homeScore.txt";
+        string awayScorePath = BodetParser.OutputPath + "awayScore.txt";
 
         bool inDecimal = bytes[6] == 0x44;
 

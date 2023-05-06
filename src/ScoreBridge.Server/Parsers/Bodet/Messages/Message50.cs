@@ -8,7 +8,7 @@ public class Message50 : IPacketFormatter
 {
     public async Task FormatPacketAsync(byte[] bytes)
     {
-        const string path = "C:\\Users\\Alex\\Documents\\ScoreBridgeOutput\\possession.txt";
+        string path = BodetParser.OutputPath + "possession.txt";
         
         using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
         {
